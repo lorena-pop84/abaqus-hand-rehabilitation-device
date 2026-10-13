@@ -100,4 +100,4 @@ Dividing the typical bulk PETG strength (45-55 MPa) by the peak stress (3.306 MP
 
 ## Files
 
-- [models/pressure-load.inp](models/pressure-load.inp): Abaqus input file of the final model
+- [model/pressure-load.inp](model/pressure-load.inp): Abaqus input file of the final model
