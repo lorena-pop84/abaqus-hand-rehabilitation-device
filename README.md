@@ -1,132 +1,103 @@
 # abaqus-hand-rehabilitation-device
 Finite element analysis of a hand rehabilitation device using Abaqus under a representative 4 N load.
-# Hand Rehabilitation Device — FEA Study
+# Hand Rehabilitation Device: FEA of the 3D-Printed Lever
 
-## Overview
-This project is part of my Bachelor's thesis, *Design of a Device for the Rehabilitation of Patients with Hand Conditions*. It focuses on the structural design and numerical evaluation of a 3D-printed mechanical device intended for hand therapy exercises.
+Linear static finite element analysis of a 3D-printed lever mechanism for hand therapy exercises, made in Abaqus/CAE. This project is part of my Bachelor's thesis, *Design of a Device for the Rehabilitation of Patients with Hand Conditions*.
 
-The mechanism functions as a first-class lever, where therapeutic input forces are transferred through a central pivot into the main support structure. To evaluate structural integrity and stiffness under normal operating conditions, I developed a finite element model in **Abaqus/CAE** subjected to a functional load of **4 N**.
+The device works as a lever: the patient pushes on the handle, the lever turns around a central pivot (axle), and a spring pushes back on a small peg on the other side. The analysis checks how much the lever bends and where the stress is highest under a **4 N load at the handle**.
 
----
+![FEA model](images/fea-model.png)
 
-## Key Engineering Highlights
-* **Targeted Simplification:** Replaced the helical spring geometry with a Reference Point Kinematic Coupling to represent spring stiffness cleanly without complex contact convergence issues.
-* **Structured Hex Mesh:** Partitioned the geometry to build a structured 8-node hexahedral mesh (global size 2.5 mm), optimizing stress resolution along the lever arm.
-* **Material & Elastic Limits:** Modeled in isotropic PETG (E = 2200 MPa, Poisson ratio = 0.40). Max stress reached **25.62 MPa**, yielding a Factor of Safety of **1.8–2.1** against PETG yield strength (45–55 MPa).
-* **Kinematic Stability:** Maximum displacement (**9.19 mm**) was dominated by operational vertical bending (U3 = -6.56 mm), while lateral play remained negligible (U1 = ±0.006 mm).
+## Results at a glance
 
----
+| Result | Value | Where |
+| :--- | ---: | :--- |
+| Max von Mises stress | **3.306 MPa** | Lever, near the axle |
+| Max displacement | **3.565 mm** | Handle end of the lever |
+| Indicative factor of safety | **about 14-17** | Against 45-55 MPa (typical bulk PETG strength) |
 
-## Objective
-The main goals of this numerical study were:
-* Identify critical stress concentration regions under functional loading.
-* Evaluate maximum von Mises stress against PETG yield limits.
-* Assess lever deflection and overall structural stiffness.
-* Validate the kinematic behavior and ensure negligible lateral instability.
-* Provide numerical justification for physical 3D-printing prototype fabrication.
+The factor of safety is indicative only, see "Limitations" below.
 
----
+## About the model
 
-## My Contribution
-Starting from the original CAD assembly created in PTC Creo Parametric, I developed the complete FEA workflow in Abaqus/CAE, including:
-* **CAD Simplification:** Removed non-critical fillets, assembly clearances, and adjustment fasteners to prevent artificial stress singularities and element distortion.
-* **Spring Idealization:** Modeled the helical spring interaction using Reference Points and Kinematic Couplings.
-* **Assembly & Interaction Setup:** Implemented General Contact, Surface-to-Surface definitions with penalty friction, MPC Beam elements, and Tie constraints at the pivot.
-* **Meshing & Convergence:** Discretized components with structured hex elements at part level.
-* **Post-Processing:** Extracted reaction forces, directional displacements, and stress contours for thesis reporting.
+- **Geometry:** CAD assembly from PTC Creo Parametric. For the analysis I simplified it in Abaqus: I removed small fillets, manufacturing gaps and clearances, and the adjustment and pretension screws, which are not important for the load path.
+- **Design basis:** the lever length (287 mm) and the force-balance relation used below come from earlier work on this device, which my thesis builds on.
+- **Software:** Abaqus/CAE (Standard solver), with Creo Parametric for the CAD.
+- **Units:** mm, N, MPa.
+- **Analysis type:** one static step, linear (geometric nonlinearity off), with automatic stabilization (damping factor 0.0002) to help the contacts settle.
 
----
+### Parts in the model
 
-## Software and Tools
-* **Abaqus/CAE** (FEA setup, solver & post-processing)
-* **PTC Creo Parametric** (Original CAD modeling)
+| Part name in the files | What it is |
+| :--- | :--- |
+| `clapa` | The lever (287 mm long, 20 mm wide, 10 mm thick), with a 100 mm guide slot around the pivot |
+| `ax_pivot` | The pivot axle (8 mm diameter) |
+| `pivot` | The adjustable pivot support that holds the axle |
+| `grinda` | The fixed support (base beam) that the pivot support sits on |
 
----
+## Model setup
 
-## Model Setup & Simplification
-To improve computational efficiency and numerical convergence without sacrificing structural accuracy:
-1. **Geometric Cleansing:** Fillets and small manufacturing gaps were suppressed. Adjustment and pretensioning screws were omitted.
-2. **Spring Abstraction:** Instead of modeling complex solid contact on a flexible 3D spring, its mechanical constraint was idealized via a Kinematic Coupling connected to dedicated Reference Points.
-
-![FEA model](images/geometry.jpeg)
-![Spring Kinematic Coupling](images/spring-coupling.png)
-
----
-
-## Material Properties
-The assembly was assigned an isotropic linear elastic material model representing **3D-printed PETG**.
+### Material
+The whole assembly uses one isotropic, linear elastic material for 3D-printed PETG.
 
 | Property | Value |
 | :--- | ---: |
-| Material | PETG (Isotropic Elastic) |
 | Young's modulus (E) | 2200 MPa |
 | Poisson's ratio | 0.40 |
-| Yield strength | ~45–55 MPa |
 
----
+In the real device the parts have a gyroid infill, so the printed material is not fully solid. Using one solid isotropic material is a simplification (see "Limitations").
 
-## FEA Setup & Boundary Conditions
+### Mesh
+Structured hexahedral (brick) elements of type C3D8R (8 nodes, reduced integration), made at part level after partitioning the geometry. Global element size is 2.5 mm with curvature control (0.05). The model has about 39,000 elements, and the lever has 6 elements through its 10 mm thickness.
 
-### Step & Loading
-* **Analysis Type:** Static, General
-* **Applied Force:** A concentrated load of **4 N** was applied vertically (-Z direction) at the handle Reference Point.
+![Mesh](images/mesh.png)
 
-### Boundary Conditions & Constraints
-* **Fixed Base:** An **ENCASTRE** condition (U1 = U2 = U3 = UR1 = UR2 = UR3 = 0) was applied to the bottom face of the fixed support.
-* **Pivot Interface:** A **Tie constraint** was defined between the pivot shaft and support lugs to prevent unwanted lateral sliding while transmitting bending moments cleanly.
-* **Interactions:** Standard General Contact with Surface-to-Surface pairs, Hard normal behavior, Penalty friction (coefficient = 0.2), and MPC Beam constraint.
+### Supports and connections
+- The fixed support (`grinda`) is fixed in all directions (ENCASTRE).
+- The lever is connected to the pivot axle with a Tie constraint on the surface of the axle hole, so the lever cannot slide off the axle.
+- All other parts touch each other through contact: general contact for all exterior surfaces, plus 13 surface-to-surface contact pairs around the axle, the lever and the pivot support. Normal behaviour is hard contact and the friction coefficient is 0.2.
+- The clearances between parts were removed, so they touch from the start of the analysis.
 
-![Boundary conditions and loading](images/boundary-conditions.jpeg)
+### Loads
+- **Handle load:** 4 N pointing down, applied at a reference point 118 mm in front of the pivot. The point is connected to the lever with an MPC Beam constraint, so the force is spread over the lever instead of acting on a single node.
+- **Spring:** the spring is **not** modeled. Its push on the peg is replaced by an equivalent pressure. For the lever to be in balance around the pivot, the spring force is F_spring = F_patient x a / b = 4 N x 118 mm / 137 mm = 3.445 N, where a = 118 mm (pivot to handle load) and b = 137 mm (pivot to peg). This is the same force-balance relation used in my thesis. Divided by the area of the 4 mm diameter peg (about 12.57 mm²), it gives a pressure of **0.274 MPa**.
 
----
+![Boundary conditions and loads](images/fixed-base.png)
+![Boundary conditions and loads](images/vertical-load.png)
+![Spring pressure](images/pressure-load.png)
 
-## Mesh
-The model was discretized using structured hexahedral elements generated at the part level before final interaction definitions.
+## Results
 
-| Mesh Parameter | Value |
-| :--- | ---: |
-| Element Shape | Hexahedral (Hex) |
-| Meshing Technique | Structured |
-| Global Element Size | 2.5 mm |
-| Curvature Control | 0.05 |
+### Von Mises stress
+The highest stress is **3.306 MPa**, on the lever near the axle. The fixed support and the rest of the assembly carry much lower stress.
 
-![Mesh](images/mesh.jpeg)
+![Von Mises stress](images/von-mises.png)
 
----
+### Displacement
+The largest displacement is **3.565 mm**, at the handle end of the lever. It has three parts: about 0.8 mm is the lever bending, about 1 mm is the lever settling in the pivot, and a small tilt around the pivot adds the rest at the tip, since the handle is far from the axle.
 
-## Results & Discussion
+![Total displacement](images/displacement.png)
 
-### Von Mises Stress
-The maximum von Mises stress in the assembly reached **25.62 MPa**, located on the upper region of the movable lever near the pivot contact region and force application area.
+## Checks on the result
 
-| Component | Max von Mises Stress | Yield Limit | Factor of Safety (FOS) |
-| :--- | ---: | ---: | ---: |
-| **Movable Lever** | **25.62 MPa** | **45–55 MPa** | **1.76–2.15** |
-| Pivot Shaft | ~4.11 MPa | 45–55 MPa | > 10 |
-| Movable Support | ~1.17 MPa | 45–55 MPa | > 35 |
-| Fixed Support | ~0.09 MPa | 45–55 MPa | > 500 |
+- **Force balance:** the moment of the handle load around the pivot is 4 N x 118 mm = 472 N•mm. The spring pressure was chosen to give the same moment on the other side (3.445 N x 137 mm = 472 N•mm), so the lever is in balance, as in a first-class lever.
+- **Hand calculation:** the lever is a 20 x 10 mm bar loaded in bending, with a maximum moment of 472 N•mm at the pivot. The nominal bending stress is 6 x M / (b x h²) = 6 x 472 / (20 x 10²) = **about 1.4 MPa**. The model gives 3.3 MPa, about 2.3 times higher. This is the expected direction: the nominal value ignores the guide slot and the axle hole, which remove material from the section and concentrate stress right where the maximum appears. I did not do a hand calculation of the reduced section.
+- **Energy:** the strain energy rises smoothly to about 4.85 N•mm, and the energy added by the stabilization is about zero. This means the stabilization does not affect the results.
 
-Under the 4 N operational load, all assembly components operate strictly within the elastic regime of PETG.
+![Energy plot](images/energy.png)
 
-![Von Mises stress](images/von-mises.jpeg)
+## Factor of safety
 
----
+Dividing the typical bulk PETG strength (45-55 MPa) by the peak stress (3.306 MPa) gives a factor of safety of about 14-17. This is an **indicative** number: it uses solid PETG, while the printed part with gyroid infill is weaker.
 
-### Displacement & Kinematics
-Total peak displacement reached **9.19 mm**. The directional breakdown confirms that deformation occurs along the intended functional axis.
+## Limitations
 
-| Displacement Component | Value | Interpretation |
-| :--- | ---: | :--- |
-| U1 (X - Lateral) | ~±0.006 mm | Negligible side-to-side play |
-| U2 (Y - Transverse) | ~0.51 mm | Minor out-of-plane compliance |
-| U3 (Z - Vertical) | ~-6.56 mm | Primary lever rotation path |
-| **U Magnitude (Total)** | **9.19 mm** | **Peak deflection at handle** |
+- The material is solid, isotropic PETG. Real 3D-printed parts have infill and weaker layer bonding, so the real strength is lower than the value used.
+- The model is linear: small displacements and no yielding.
+- The spring is replaced by a constant equivalent pressure, so the model does not show how the spring force changes as it compresses.
+- Results come from a single mesh with reduced-integration elements, and no mesh convergence study was done. The peak stress is next to the axle hole and the slot, which is where results depend most on the mesh.
+- The results were not compared with physical measurements.
 
-![Total displacement](images/displacement.jpeg)
+## Files
 
----
-
-## Conclusions
-1. **Structural Margin:** With a peak stress of 25.62 MPa against a 45–55 MPa yield threshold, the PETG design achieves a minimum Factor of Safety of ~1.8 under functional therapeutic loads.
-2. **Kinematic Precision:** Directional displacement analysis verifies that over 99% of movement occurs along the intended vertical lever stroke (U3 = -6.56 mm), with virtually zero lateral instability (U1 = 0.006 mm).
-3. **Design Readiness:** The simplified numerical model validated the structural rigidity and geometric optimization of the mechanism, successfully supporting physical 3D-printing prototype fabrication.
+- [models/pressure-load.inp](models/pressure-load.inp): Abaqus input file of the final model
