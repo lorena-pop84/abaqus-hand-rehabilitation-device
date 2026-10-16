@@ -2,7 +2,7 @@
 Finite element analysis of a hand rehabilitation device using Abaqus under a representative 4 N load.
 # Hand Rehabilitation Device: FEA of the 3D-Printed Lever
 
-Finite element analysis of a 3D-printed lever mechanism for hand therapy exercises, made in Abaqus/CAE. This project is part of my Bachelor's thesis, *Design of a Device for the Rehabilitation of Patients with Hand Conditions*.
+Finite element analysis of a 3D-printed lever mechanism for hand therapy exercises, made in Abaqus/CAE. This project is part of my Bachelor's thesis, *Design of a Device for the Rehabilitation of Patients with Hand Disorders*.
 
 The device works as a lever: the patient pushes on the handle, the lever turns around a central axle, and a spring pushes back on a small peg on the other side. The analysis is a static snapshot of the moment when the two forces are in balance. It shows how much the lever bends and where the stress is highest under a **4 N load at the handle**. It does not simulate the movement of the lever.
 
